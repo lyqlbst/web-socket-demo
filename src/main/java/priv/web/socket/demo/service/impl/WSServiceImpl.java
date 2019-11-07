@@ -26,38 +26,6 @@ public class WSServiceImpl implements WSService {
     // 保存所有的与客户端对应的session对象
     private static final Map<String, Session> SESSIONS = new ConcurrentHashMap<>();
 
-    @OnOpen
-    @Override
-    public void onOpen(Session session) {
-        SESSIONS.put(session.getId(), session);
-
-        log.info("有新的连接创建，sessionId: {}", session.getId());
-        logCurrentConnectionCount();
-        sendMessage(session, "连接成功");
-    }
-
-    @OnClose
-    @Override
-    public void onClose(Session session) {
-        SESSIONS.remove(session.getId());
-
-        log.info("有需要关闭的连接，sessionId: {}", session.getId());
-        logCurrentConnectionCount();
-    }
-
-    @OnMessage
-    @Override
-    public void onMessage(String message, Session session) {
-        log.info("收到来自客户端的消息: {}", message);
-        sendMessage(session, "已收到消息");
-    }
-
-    @OnError
-    @Override
-    public void onError(Session session, Throwable e) {
-        log.error("发生错误!", e);
-    }
-
     @Override
     public void massMessage(String message) {
         log.info("给所有客户端发送消息...");
@@ -78,6 +46,32 @@ public class WSServiceImpl implements WSService {
         sendMessage(session, message);
     }
 
+    @OnOpen
+    public void onOpen(Session session) {
+        SESSIONS.put(session.getId(), session);
+
+        log.info("有新的连接创建，sessionId: {}，当前连接数: {}", session.getId(), SESSIONS.size());
+        sendMessage(session, "连接成功");
+    }
+
+    @OnClose
+    public void onClose(Session session) {
+        SESSIONS.remove(session.getId());
+
+        log.info("有需要关闭的连接，sessionId: {}，当前连接数: {}", session.getId(), SESSIONS.size());
+    }
+
+    @OnMessage
+    public void onMessage(String message, Session session) {
+        log.info("收到来自客户端的消息: {}", message);
+        sendMessage(session, "已收到消息");
+    }
+
+    @OnError
+    public void onError(Session session, Throwable e) {
+        log.error("session: {} 发生错误!", session.getId(), e);
+    }
+
     /**
      * 发送消息
      *
@@ -91,12 +85,5 @@ public class WSServiceImpl implements WSService {
         } catch (IOException e) {
             log.error("给客户端发送消息错误!", e);
         }
-    }
-
-    /**
-     * 打印当前的状态
-     */
-    private void logCurrentConnectionCount() {
-        log.info("当前连接数：{}", SESSIONS.size());
     }
 }
