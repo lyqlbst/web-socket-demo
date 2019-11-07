@@ -15,7 +15,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author lyqlbst
- * @description 实现ws的方法调用
+ * @description <h4>实现ws的方法调用</h4>
+ * <p>值得注意的是，每次浏览器刷新，session会发生变化。</p>
  * @email 1098387108@qq.com
  * @date 2019/11/7 3:25 PM
  */
@@ -23,7 +24,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 @ServerEndpoint("/ws/msg")
 public class WSServiceImpl implements WSService {
-    // 保存所有的与客户端对应的session对象
+    /**
+     * 保存所有的与客户端对应的session对象
+     */
     private static final Map<String, Session> SESSIONS = new ConcurrentHashMap<>();
 
     @Override
@@ -46,6 +49,11 @@ public class WSServiceImpl implements WSService {
         sendMessage(session, message);
     }
 
+    /**
+     * 连接建立成功调用的方法
+     *
+     * @param session 客户端对应的session信息
+     */
     @OnOpen
     public void onOpen(Session session) {
         SESSIONS.put(session.getId(), session);
@@ -54,6 +62,11 @@ public class WSServiceImpl implements WSService {
         sendMessage(session, "连接成功");
     }
 
+    /**
+     * 连接关闭后调用
+     *
+     * @param session 客户端对应的session信息
+     */
     @OnClose
     public void onClose(Session session) {
         SESSIONS.remove(session.getId());
@@ -61,12 +74,24 @@ public class WSServiceImpl implements WSService {
         log.info("有需要关闭的连接，sessionId: {}，当前连接数: {}", session.getId(), SESSIONS.size());
     }
 
+    /**
+     * 收到客户端的消息后调用
+     *
+     * @param message 客户端发送来的消息
+     * @param session 客户端对应的session信息
+     */
     @OnMessage
     public void onMessage(String message, Session session) {
         log.info("收到来自客户端的消息: {}", message);
         sendMessage(session, "已收到消息");
     }
 
+    /**
+     * 发生异常后调用
+     *
+     * @param session 客户端对应的session信息
+     * @param e       异常
+     */
     @OnError
     public void onError(Session session, Throwable e) {
         log.error("session: {} 发生错误!", session.getId(), e);
